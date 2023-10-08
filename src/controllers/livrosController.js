@@ -4,25 +4,29 @@ import livros from "../models/Livro.js";
 class LivroController {
 
     static listarLivros = (req, res) => {
-        livros.find((err, livros) => {
-            res.status(200).json(livros);
+        livros.find()
+            .populate('autor')
+            .exec((err, livros) => {
+                res.status(200).json(livros);
         });
     }
 
     static obterLivroPorID = (req, res) => {
         const id = req.params.id;
         
-        livros.findById(id, (err, livro) => {
-            if (!err) {
-                if (!livro) {
-                    res.status(404).send({message: "Livro nao encontrado."})
+        livros.findById(id)
+            .populate('autor', 'name')
+            .exec((err, livro) => {
+                if (!err) {
+                    if (!livro) {
+                        res.status(404).send({message: "Livro nao encontrado."})
+                    } else {
+                        res.status(200).send(livro.toJSON())
+                    }
                 } else {
-                    res.status(200).send(livro.toJSON())
+                    res.status(500).send({message: `${err.message} - Id do livro nao localizado.`})
                 }
-            } else {
-                res.status(500).send({message: `${err.message} - Id do livro nao localizado.`})
-            }
-        })
+            })
     }
 
     static cadastrarLivro = (req, res) => {
@@ -66,6 +70,14 @@ class LivroController {
             } else {
                 res.status(500).send({message: err.message})
             }
+        })
+    }
+
+    static ObterLivroPorEditora = (req, res) => {
+        const editora = req.query.editora
+
+        livros.find({"editora": editora}, {}, (err, livros) => {
+            res.status(200).send(livros);
         })
     }
 
